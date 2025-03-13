@@ -1,23 +1,40 @@
-#Requires AutoHotkey v2.0
+#Requires AutoHotkey v2
+#SingleInstance Force
+
+; Config
+MIN_LENGTH := 3
+HEX_COLORS := false
 
 RegHook := RegExHs("VI")
 RegHook.NotifyNonText := true
 RegHook.KeyOpt("{Space}{Tab}{Enter}", "+SN")
 RegHook.Start()
 
-; This is a MODIFIED version of https://github.com/8LWXpg/RegExHotstring/
+if HEX_COLORS
+    RegHook.Add("^(?:[0-9abcdefgilostz]{3}|[0-9abcdefgilostz]{6}|[0-9abcdefgilostz]{8})$", call)
+else
+    RegHook.Add("^(?:[0-9abcdefgilostz]{" MIN_LENGTH ",})$", call)
 
-RegExHotstring(Str, CallBack, Options := "") {
-	RegHook.Add(Str, CallBack, Options)
+call(match) {
+    s := HEX_COLORS ? "#" : "0x"
+    s .= StrUpper(match[0])
+    s := StrReplace(s, "g", "6")
+    s := StrReplace(s, "i", "1")
+    s := StrReplace(s, "l", "1")
+    s := StrReplace(s, "o", "0")
+    s := StrReplace(s, "s", "5")
+    s := StrReplace(s, "t", "7")
+    s := StrReplace(s, "z", "2")
+	Send("{raw}" s)
 }
 
+
+; Below is a MODIFIED version of https://github.com/8LWXpg/RegExHotstring/
 class RegExHs extends InputHook {
-	; stores with RegEx string as key and obj as value
 	hs := Map()
 
-	; append new RegExHotstring
-	Add(Str, CallBack, Options) {
-		this.hs[Str] := {str: Str, callback: CallBack}
+	Add(Str, CallBack) {
+		this.hs[Str] := CallBack
 	}
 
 	OnKeyDown := this.keyDown
@@ -40,10 +57,8 @@ class RegExHs extends InputHook {
 		}
 		input := match[1]
 		this.Stop()
-		; loop through each strings and find the first match
-		for , obj in this.hs {
-			callback := obj.callback
-			start := RegExMatch(input, obj.str, &match)
+		for str, callback in this.hs {
+			start := RegExMatch(input, str, &match)
 			if (start) {
 				Send("{BS " match.Len[0] "}")
 				callback(match)
