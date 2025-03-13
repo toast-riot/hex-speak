@@ -1,35 +1,55 @@
 #Requires AutoHotkey v2
 #SingleInstance Force
 
-; Config
+;// BUG: MIN_LENGTH is ignored when HEX_COLORS is true
+
+;// Config
 MIN_LENGTH := 3
 HEX_COLORS := false
+CONVERSIONS := {
+    g: "6",
+    i: "1",
+    l: "1",
+    o: "0",
+    p: "9",
+    r: "2",
+    s: "5",
+    t: "7",
+    z: "2"
+}
 
+;// Main
 RegHook := RegExHs("VI")
 RegHook.NotifyNonText := true
 RegHook.KeyOpt("{Space}{Tab}{Enter}", "+SN")
 RegHook.Start()
 
+rg := ""
+for k in CONVERSIONS.OwnProps()
+	rg .= k
+rg := "[0-9a-f" rg "]{"
+
 if HEX_COLORS
-    RegHook.Add("^(?:[0-9abcdefgilostz]{3}|[0-9abcdefgilostz]{6}|[0-9abcdefgilostz]{8})$", call)
+    RegHook.Add("^(?:" rg "3}|" rg "6}|" rg "8})$", call)
 else
-    RegHook.Add("^(?:[0-9abcdefgilostz]{" MIN_LENGTH ",})$", call)
+    RegHook.Add("^(?:" rg MIN_LENGTH ",})$", call)
+
+
+#SuspendExempt true
+!+q::ExitApp()
+!+p::Suspend()
+#SuspendExempt false
+
 
 call(match) {
-    s := HEX_COLORS ? "#" : "0x"
-    s .= StrUpper(match[0])
-    s := StrReplace(s, "g", "6")
-    s := StrReplace(s, "i", "1")
-    s := StrReplace(s, "l", "1")
-    s := StrReplace(s, "o", "0")
-    s := StrReplace(s, "s", "5")
-    s := StrReplace(s, "t", "7")
-    s := StrReplace(s, "z", "2")
-	Send("{raw}" s)
+    s := StrUpper(match[0])
+	for k, v in CONVERSIONS.OwnProps()
+		s := StrReplace(s, k, v)
+	Sleep(50)
+	Send("{raw}" (HEX_COLORS ? "#" : "0x") s)
 }
 
-
-; Below is a MODIFIED version of https://github.com/8LWXpg/RegExHotstring/
+;// Below is a MODIFIED version of https://github.com/8LWXpg/RegExHotstring/
 class RegExHs extends InputHook {
 	hs := Map()
 
@@ -48,7 +68,11 @@ class RegExHs extends InputHook {
 			return
 		}
 
-		; find the last pattern without \s
+		if A_IsSuspended {
+			Send("{Blind}{vk" Format("{:02x}", vk) " down}")
+			return
+		}
+
 		if (!RegExMatch(this.Input, "(\S+)(?![\s\S]*(\S+))", &match)) {
 			this.Stop()
 			Send("{Blind}{vk" Format("{:02x}", vk) " down}")
