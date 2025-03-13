@@ -1,0 +1,46 @@
+leet
+
+Good letters
+g 6
+i 1
+l 1
+o 0
+s 5
+t 7
+z 2
+
+These are a bit of a stretch imo
+r 2
+p 9
+
+
+The string must be a length of 3, 6 or 8.
+Each character in the string must be must be a number or one of the following letters: abcdefgilostz
+
+(^|\s)([0-9abcdefgilostz]{3}|[0-9abcdefgilostz]{6}|[0-9abcdefgilostz]{8})
+
+Length 3, 6 or 8
+
+## tests
+- general
+ff0000
+bada55
+c0ffee
+salted
+oracle
+
+- three-letter
+lol
+sos
+123
+
+- six-letter
+abdicate
+54340920
+
+- none
+test
+none
+thr
+pragma
+zen
