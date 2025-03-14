@@ -25,9 +25,9 @@ def hexify(string, min_length=3, colors=False):
     m = f"[0-9a-f{''.join(CONVERSIONS)}]"
     if colors:
         m = "|".join(f"{m}{{{a}}}" for a in filter(lambda x: x >= min_length, (3, 6, 8)))
-        reg = f"(^|\\s)({m})(?=$|\\s)"
+        reg = f"(\\b)({m})(?=$|\\s)"
     else:
-        reg = f"(^|\\s)({m}{{{min_length},}})(?=$|\\s)"
+        reg = f"(\\b)({m}{{{min_length},}})(?=$|\\s)"
 
     return re.sub(reg, rpl, string)
 
