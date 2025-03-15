@@ -27,9 +27,9 @@ To change the config, you will need to download `hexify.ahk`, then edit the conf
 `(\p{P}*)([0-9a-fA-F<<1>>]{<<2>>,}+)(<<3>>)(\p{P}*)`
 
 Where:
-`<<1>>` = a list of all leetspeak letters
-`<<2>>` = `min_length`
-`<<3>>` = `\w*` if `allow_compound`
+- `<<1>>` is a list of all leetspeak letters
+- `<<2>>` is `min_length`
+- `<<3>>` is `\w*` if `allow_compound`
 
 ## Other
 There is also a (not updated) Python script included, which can be used to convert a string.
