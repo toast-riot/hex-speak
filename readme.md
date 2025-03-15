@@ -1,8 +1,6 @@
 # Hex Speak
 A silly idea I had. Converts some words you type into "leet word" hex numbers. Inspired by [bada55.io](http://bada55.io).
 
-(Color mode will instead give you valid hex colors)
-
 For example:
 | Word     | Hex        | Color                                     |
 |----------|------------|-------------------------------------------|
@@ -16,8 +14,25 @@ For example:
 | allocate | 0xA110CA7E | $\color{#A110CA7E}{\textsf{\\#A110CA7E}}$ |
 | toast    | 0x70A57    | -                                         |
 
-The Python script can be used to convert a string.
+- enabling "hex colors" will instead give you valid hex colors
+- enabling "allow partial" will allow partial hexification (e.g. `codeblocks` -> `0xC0DEB10Cks`)
 
+## Usage
+Download the `.exe` from [releases](https://github.com/toast-riot/hex-speak/releases/latest) and run it.
 To exit the AHK script, press <kbd><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>q</kbd></kbd>, or use the tray icon. To temporarily pause the script, use <kbd><kbd>Alt</kbd>+<kbd>Shift</kbd>+<kbd>p</kbd></kbd>
 
+To change the config, you will need to download `hexify.ahk`, then edit the config at the top of the file.
+
+## The Regex
+`(\p{P}*)([0-9a-fA-F<<1>>]{<<2>>,}+)(<<3>>)(\p{P}*)`
+
+Where:
+`<<1>>` = a list of all leetspeak letters
+`<<2>>` = `min_length`
+`<<3>>` = `\w*` if `allow_compound`
+
+## Other
+There is also a (not updated) Python script included, which can be used to convert a string.
+
+## Credits
 The AHK script uses [RegexHotString by 8LWXpg](https://github.com/8LWXpg/RegExHotstring/).
