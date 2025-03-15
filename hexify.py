@@ -1,5 +1,7 @@
 import re
 
+# NOTE: This script is not up to date with the AHK script
+
 CONVERSIONS = {
     "g": "6",
     "i": "1",

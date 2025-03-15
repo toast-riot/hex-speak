@@ -1,22 +1,48 @@
 #Requires AutoHotkey v2
 #SingleInstance Force
 
-;// BUG: MIN_LENGTH is ignored when HEX_COLORS is true
-
 ;// Config
-MIN_LENGTH := 3
-HEX_COLORS := false
-CONVERSIONS := {
-    g: "6",
-    i: "1",
-    l: "1",
-    o: "0",
-    p: "9",
-    r: "2",
-    s: "5",
-    t: "7",
-    z: "2"
+class CONFIG {
+	; The minimum length of text that can be hexified
+	; NOTE: This is ignored if hex_colors is true
+	static min_length := 3
+
+	; Whether to only output valid hex colors
+	static hex_colors := false
+
+	; Whether to allow partial hexification (e.g. "codeblocks" -> "0xC0DEB10Cks")
+	static allow_partial := false
+
+	; What letters to convert to numbers
+	static conversions := {
+		g: "6",
+		i: "1",
+		l: "1",
+		o: "0",
+		p: "9",
+		r: "2",
+		s: "5",
+		t: "7",
+		z: "2"
+	}
+
+	; The format for output text
+	; - PREFIX: "0x" (or "#" if hex_colors is true)
+	; - HEX: the hexified part of the word
+	; - NORM: the non-hexified part of the word
+	; - ORIGINAL: the original word
+
+	; The get method is overridden to allow for dynamic formatting. For example:
+	; if WinActive("ahk_exe Notepad.exe")
+	;    return "`{{PREFIX}}{{HEX}}`{{NORM}}"
+	static format_string {
+		get {
+			return "{{PREFIX}}{{HEX}}{{NORM}}"
+		}
+	}
 }
+
+
 
 ;// Main
 RegHook := RegExHs("VI")
@@ -25,15 +51,14 @@ RegHook.KeyOpt("{Space}{Tab}{Enter}", "+SN")
 RegHook.Start()
 
 rg := ""
-for k in CONVERSIONS.OwnProps()
-	rg .= k
-rg := "[0-9a-f" rg "]{"
+for k in config.conversions.OwnProps()
+	rg .= StrUpper(k) StrLower(k)
+rg := "[0-9a-fA-F" rg "]{"
 
-if HEX_COLORS
-    RegHook.Add("^(?:" rg "3}|" rg "6}|" rg "8})$", call)
+if config.hex_colors
+    RegHook.Add("^(\p{P}*)(" rg "8}|" rg "6}|" rg "3}+)(" (config.allow_partial ? "\w*" : "") ")(\p{P}*)$", call)
 else
-    RegHook.Add("^(?:" rg MIN_LENGTH ",})$", call)
-
+	RegHook.Add("^(\p{P}*)(" rg config.min_length ",}+)(" (config.allow_partial ? "\w*" : "") ")(\p{P}*)$", call)
 
 #SuspendExempt true
 !+q::ExitApp()
@@ -42,11 +67,26 @@ else
 
 
 call(match) {
-    s := StrUpper(match[0])
-	for k, v in CONVERSIONS.OwnProps()
+    s := StrUpper(match[2])
+	for k, v in config.conversions.OwnProps()
 		s := StrReplace(s, k, v)
+
+	rep := {
+		PREFIX: (config.hex_colors ? "#" : "0x"),
+		HEX: s,
+		NORM: match[3],
+		ORIGINAL: match[2] match[3]
+	}
+
+	formatted := config.format_string
+	if (formatted is Integer) and !formatted
+		formatted := REP.ORIGINAL
+	else
+		for k, v in rep.OwnProps()
+			formatted := StrReplace(formatted, "{{" k "}}", v)
+
 	Sleep(50)
-	Send("{raw}" (HEX_COLORS ? "#" : "0x") s)
+	Send("{raw}" match[1] formatted match[4])
 }
 
 ;// Below is a MODIFIED version of https://github.com/8LWXpg/RegExHotstring/
